@@ -5,6 +5,8 @@ import Text from '@/components/common/Text'
 import { createStyle } from '@/utils/tools'
 import CheckBox from '@/components/common/CheckBox'
 import { handleDownload } from './listAction'
+import { useSetting } from '@/store/setting/hook'
+import settingActions from '@/store/setting/action'
 
 interface TitleType {
   updateTitle: (musicInfo: LX.Music.MusicInfo) => void
@@ -54,6 +56,8 @@ export default forwardRef<MusicDownloadModalType, MusicDownloadModalProps>(
     const [selectedQuality, setSelectedQuality] = useState<LX.Quality>('128k')
     const [playQualityList, setPlayQualityList] = useState<MusicOption[]>([])
     const [visible, setVisible] = useState(false)
+    const setting = useSetting()
+    const [downloadLyric, setDownloadLyric] = useState(setting['download.autoDownloadLyric'])
 
     interface QualityMap {
       [key: string]: MusicOption
@@ -105,6 +109,8 @@ export default forwardRef<MusicDownloadModalType, MusicDownloadModalProps>(
       show(info) {
         selectedInfo.current = info
         calcQualitys()
+        // 重置歌词下载选项为当前设置值
+        setDownloadLyric(setting['download.autoDownloadLyric'])
         if (visible) {
           handleShow()
         } else {
@@ -119,7 +125,19 @@ export default forwardRef<MusicDownloadModalType, MusicDownloadModalProps>(
     const handleDownloadMusic = () => {
       setSelectedQuality('128k')
       alertRef.current?.setVisible(false)
-      handleDownload(selectedInfo.current, selectedQuality)
+
+      // 临时更新设置以反映用户的选择
+      const originalSetting = setting['download.autoDownloadLyric']
+      if (originalSetting !== downloadLyric) {
+        settingActions.updateSetting({ 'download.autoDownloadLyric': downloadLyric })
+      }
+
+      handleDownload(selectedInfo.current, selectedQuality).finally(() => {
+        // 如果用户的选择与原设置不同，下载完成后恢复原设置
+        if (originalSetting !== downloadLyric) {
+          settingActions.updateSetting({ 'download.autoDownloadLyric': originalSetting })
+        }
+      })
     }
 
     interface MusicOption {
@@ -162,6 +180,13 @@ export default forwardRef<MusicDownloadModalType, MusicDownloadModalProps>(
               <Item name={item.name + '' + '(' + item.size + ')'} id={item.id} key={item.key} />
             ))}
           </View>
+          <View style={styles.lyricOption}>
+            <CheckBox
+              check={downloadLyric}
+              label="同时下载歌词文件"
+              onChange={(checked) => setDownloadLyric(checked)}
+            />
+          </View>
         </View>
       </ConfirmAlert>
     ) : null
@@ -183,5 +208,11 @@ const styles = createStyle({
   list: {
     flexDirection: 'column',
     flexWrap: 'nowrap',
+  },
+  lyricOption: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
 })

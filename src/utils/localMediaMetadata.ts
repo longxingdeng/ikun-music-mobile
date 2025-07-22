@@ -24,6 +24,70 @@ export const scanAudioFiles = async (dirPath: string) => {
     .map((file) => file)
 }
 
+// 支持的音频文件扩展名
+const SUPPORTED_AUDIO_EXTENSIONS = [
+  'mp3', 'flac', 'wav', 'aac', 'm4a', 'ogg', 'wma', 'ape', 'opus'
+]
+
+// 递归扫描音频文件
+export const scanAudioFilesRecursive = async (
+  dirPath: string,
+  onProgress?: (current: number, total: number, currentPath: string) => void,
+  maxDepth: number = 10,
+  currentDepth: number = 0
+): Promise<import('@/utils/fs').FileType[]> => {
+  if (currentDepth >= maxDepth) return []
+
+  try {
+    const files = await readDir(dirPath)
+    const audioFiles: import('@/utils/fs').FileType[] = []
+    const directories: import('@/utils/fs').FileType[] = []
+
+    // 分离文件和目录
+    for (const file of files) {
+      if (file.isDirectory) {
+        directories.push(file)
+      } else {
+        const ext = extname(file?.name ?? '').toLowerCase()
+        if (file.mimeType?.startsWith('audio/') || SUPPORTED_AUDIO_EXTENSIONS.includes(ext)) {
+          audioFiles.push(file)
+        }
+      }
+    }
+
+    let processedCount = 0
+    const totalItems = audioFiles.length + directories.length
+
+    // 报告当前目录的音频文件
+    for (const file of audioFiles) {
+      processedCount++
+      onProgress?.(processedCount, totalItems, file.path)
+    }
+
+    // 递归扫描子目录
+    for (const dir of directories) {
+      try {
+        const subFiles = await scanAudioFilesRecursive(
+          dir.path,
+          onProgress,
+          maxDepth,
+          currentDepth + 1
+        )
+        audioFiles.push(...subFiles)
+        processedCount++
+        onProgress?.(processedCount, totalItems, dir.path)
+      } catch (error) {
+        console.warn(`Failed to scan directory: ${dir.path}`, error)
+      }
+    }
+
+    return audioFiles
+  } catch (error) {
+    console.warn(`Failed to read directory: ${dirPath}`, error)
+    return []
+  }
+}
+
 const clearPicCache = async () => {
   await unlink(picCachePath)
   cleared = true

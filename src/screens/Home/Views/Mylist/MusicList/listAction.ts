@@ -12,6 +12,8 @@ import musicSdk from '@/utils/musicSdk'
 import { getListMusicSync } from '@/utils/listManage'
 import { requestStoragePermission } from '@/utils/tools'
 import { getMusicUrl } from '@/core/music/online'
+import { getLyricInfo } from '@/core/music'
+import { writeFile, mkdir } from '@/utils/fs'
 import RNFetchBlob from 'rn-fetch-blob'
 
 export const handlePlay = (listId: SelectInfo['listId'], index: SelectInfo['index']) => {
@@ -195,6 +197,38 @@ export function getFileExtension(url: string) {
   return match ? match[1] : 'mp3'
 }
 
+/**
+ * 保存歌词文件
+ */
+export const saveLyricFile = async (
+  musicInfo: any,
+  downloadDir: string,
+  fileName: string
+): Promise<void> => {
+  try {
+    // 确保下载目录存在
+    await mkdir(downloadDir).catch(() => {
+      // 目录可能已存在，忽略错误
+    })
+
+    const lyricInfo = await getLyricInfo({
+      musicInfo,
+      isRefresh: false,
+    })
+
+    if (lyricInfo && lyricInfo.lyric && lyricInfo.lyric.trim()) {
+      const lyricPath = `${downloadDir}/${fileName}.lrc`
+      await writeFile(lyricPath, lyricInfo.lyric, 'utf8')
+      console.log('歌词文件保存成功:', lyricPath)
+    } else {
+      console.log('未找到歌词或歌词为空，跳过歌词文件保存')
+    }
+  } catch (error) {
+    console.warn('保存歌词文件失败:', error)
+    // 不抛出错误，避免影响音频下载
+  }
+}
+
 export const handleDownload = async (musicInfo: any, quality: LX.Quality) => {
   try {
     await requestStoragePermission()
@@ -205,11 +239,17 @@ export const handleDownload = async (musicInfo: any, quality: LX.Quality) => {
         isRefresh: true,
         allowToggleSource: true,
       })
-        .then((url) => {
+        .then(async (url) => {
           const extension = getFileExtension(url)
           const fileName = `${musicInfo.name} - ${musicInfo.singer} - ${quality}`
           const downloadDir = RNFetchBlob.fs.dirs.MusicDir + '/IKUN Music'
           const path = `${downloadDir}/${fileName}.${extension}`
+
+          // 如果设置中启用了自动下载歌词，则同时下载歌词文件
+          if (settingState.setting['download.autoDownloadLyric']) {
+            void saveLyricFile(musicInfo, downloadDir, `${musicInfo.name} - ${musicInfo.singer}`)
+          }
+
           RNFetchBlob.config({
             fileCache: true,
             addAndroidDownloads: {
@@ -222,7 +262,10 @@ export const handleDownload = async (musicInfo: any, quality: LX.Quality) => {
           })
             .fetch('GET', url)
             .then((res) => {
-              toast(`${fileName} 下载成功! 请使用音乐标签写入Metadata`, 'long')
+              const successMsg = settingState.setting['download.autoDownloadLyric']
+                ? `${fileName} 下载成功! 歌词文件已同时保存。请使用音乐标签写入Metadata`
+                : `${fileName} 下载成功! 请使用音乐标签写入Metadata`
+              toast(successMsg, 'long')
             })
             .catch((error) => {
               toast(`文件下载失败：${error}`)

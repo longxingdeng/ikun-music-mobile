@@ -342,6 +342,11 @@ declare global {
       'download.fileName': '歌名 - 歌手' | '歌手 - 歌名' | '歌名'
 
       /**
+       * 下载时自动获取歌词
+       */
+      'download.autoDownloadLyric': boolean
+
+      /**
        * 是否启用同步
        */
       'sync.enable': boolean

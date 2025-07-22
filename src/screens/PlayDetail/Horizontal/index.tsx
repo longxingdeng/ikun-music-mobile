@@ -55,19 +55,23 @@ export default memo(({ componentId }: { componentId: string }) => {
       <StatusBar />
       <View style={{ ...styles.container, paddingTop: statusBarHeight }}>
         <View style={styles.left}>
+          <View style={styles.leftTop}>
+            <Lyric />
+          </View>
+          <View style={styles.leftBottom}>
+            <Player />
+          </View>
+        </View>
+        <View style={styles.right}>
           <Header />
-          <View style={styles.leftContent}>
+          <View style={styles.rightContent}>
             <MoreBtn />
             <Pic componentId={componentId} />
           </View>
-          <Player />
           {/* <View style={styles.controlBtn} nativeID="pageIndicator">
             <MoreBtn />
             <ControlBtn />
           </View> */}
-        </View>
-        <View style={styles.right}>
-          <Lyric />
         </View>
       </View>
     </PageContent>
@@ -80,23 +84,36 @@ const styles = createStyle({
     flexDirection: 'row',
   },
   left: {
+    width: '55%',
+    flexGrow: 0,
+    flexShrink: 0,
+    flexDirection: 'column',
+    // backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  leftTop: {
+    flex: 1,
+    // backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  leftBottom: {
+    flexShrink: 0,
+    flexGrow: 0,
+    paddingBottom: 10,
+    marginLeft: marginLeftRaw,
+    // backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  right: {
     flex: 1,
     width: '45%',
     paddingBottom: 10,
     // backgroundColor: 'rgba(0,0,0,0.1)',
   },
-  leftContent: {
+  rightContent: {
     flexShrink: 1,
     flexGrow: 0,
     marginLeft: marginLeftRaw,
     // flexDirection: 'row',
     // backgroundColor: 'rgba(0,0,0,0.1)',
     // alignItems: 'center',
-  },
-  right: {
-    width: '55%',
-    flexGrow: 0,
-    flexShrink: 0,
   },
   controlBtn: {
     flex: 1,
