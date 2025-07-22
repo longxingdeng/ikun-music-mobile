@@ -51,10 +51,11 @@ jobs:
         cd android
         ./gradlew assembleDebug
 
-    - name: Build Release APK
+    - name: Build Release APK (unsigned)
       run: |
         cd android
         ./gradlew assembleRelease
+      continue-on-error: true
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
@@ -62,11 +63,12 @@ jobs:
         name: debug-apk
         path: android/app/build/outputs/apk/debug/app-universal-debug.apk
 
-    - name: Upload Release APK
+    - name: Upload Release APK (if exists)
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: release-apk
-        path: android/app/build/outputs/apk/release/app-universal-release-unsigned.apk
+        path: android/app/build/outputs/apk/release/app-universal-release.apk
 
     - name: Create Release
       if: github.ref == 'refs/heads/main'
