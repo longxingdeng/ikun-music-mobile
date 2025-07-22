@@ -57,18 +57,25 @@ jobs:
         ./gradlew assembleRelease
       continue-on-error: true
 
+    - name: List APK files
+      run: |
+        echo "=== Debug APK files ==="
+        find android/app/build/outputs/apk/debug -name "*.apk" || echo "No debug APK files found"
+        echo "=== Release APK files ==="
+        find android/app/build/outputs/apk/release -name "*.apk" || echo "No release APK files found"
+
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
         name: debug-apk
-        path: android/app/build/outputs/apk/debug/app-universal-debug.apk
+        path: android/app/build/outputs/apk/debug/*.apk
 
     - name: Upload Release APK (if exists)
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: release-apk
-        path: android/app/build/outputs/apk/release/app-universal-release.apk
+        path: android/app/build/outputs/apk/release/*.apk
 
     - name: Create Release
       if: github.ref == 'refs/heads/main'
@@ -99,8 +106,8 @@ jobs:
           - 歌词下载和显示功能
           - 本地音乐库扫描
         files: |
-          android/app/build/outputs/apk/debug/app-universal-debug.apk
-          android/app/build/outputs/apk/release/app-universal-release-unsigned.apk
+          android/app/build/outputs/apk/debug/*.apk
+          android/app/build/outputs/apk/release/*.apk
         draft: false
         prerelease: false
       env:
