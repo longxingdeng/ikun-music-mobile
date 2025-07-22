@@ -77,38 +77,16 @@ jobs:
         name: release-apk
         path: android/app/build/outputs/apk/release/*.apk
 
-    - name: Create Release
+    - name: Create Release (manual)
       if: github.ref == 'refs/heads/main'
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v${{ github.run_number }}
-        name: Release v${{ github.run_number }}
-        body: |
-          ## 🎵 ikun-music-mobile APK Release
-          
-          ### 新功能
-          - ✅ 横屏播放界面优化 (歌词左侧，控制左下，图片右侧)
-          - ✅ 下载时自动获取歌词功能
-          - ✅ 歌词时间轴在线调节
-          - ✅ 本地音乐搜索在线歌词
-          
-          ### 下载说明
-          - **app-universal-debug.apk**: 调试版本，包含所有架构，文件较大
-          - **app-universal-release-unsigned.apk**: 发布版本，未签名，需要允许安装未知来源应用
-          
-          ### 安装方法
-          1. 下载对应的APK文件
-          2. 在手机设置中允许安装未知来源应用
-          3. 点击APK文件安装
-          
-          ### 测试重点
-          - 横屏播放界面布局
-          - 歌词下载和显示功能
-          - 本地音乐库扫描
-        files: |
-          android/app/build/outputs/apk/debug/*.apk
-          android/app/build/outputs/apk/release/*.apk
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "🎉 构建完成！"
+        echo "📱 APK文件已上传到Artifacts，请从Actions页面下载："
+        echo "   - Debug APK: 适用于测试，包含调试信息"
+        echo "   - Release APK: 优化版本（如果构建成功）"
+        echo ""
+        echo "📋 下载步骤："
+        echo "1. 访问: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        echo "2. 滚动到页面底部的 'Artifacts' 部分"
+        echo "3. 点击下载对应的APK文件"
+        echo "4. 解压下载的zip文件获取APK"
