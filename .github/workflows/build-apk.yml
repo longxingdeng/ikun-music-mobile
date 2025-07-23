@@ -46,14 +46,35 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x android/gradlew
 
+    - name: Create assets directory
+      run: mkdir -p android/app/src/main/assets
+
+    - name: Generate JS Bundle for Release
+      run: |
+        echo "Generating JavaScript bundle..."
+        npx react-native bundle \
+          --platform android \
+          --dev false \
+          --entry-file index.js \
+          --bundle-output android/app/src/main/assets/index.android.bundle \
+          --assets-dest android/app/src/main/res/ \
+          --reset-cache
+
+        echo "Checking generated bundle..."
+        ls -la android/app/src/main/assets/
+        echo "Bundle size:"
+        du -h android/app/src/main/assets/index.android.bundle || echo "Bundle not found!"
+
     - name: Build Debug APK
       run: |
         cd android
+        ./gradlew clean
         ./gradlew assembleDebug
 
-    - name: Build Release APK (unsigned)
+    - name: Build Release APK
       run: |
         cd android
+        echo "Building release APK..."
         ./gradlew assembleRelease
       continue-on-error: true
 
@@ -68,14 +89,16 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: debug-apk
-        path: android/app/build/outputs/apk/debug/*.apk
+        path: android/app/build/outputs/apk/debug/
+        if-no-files-found: error
 
     - name: Upload Release APK (if exists)
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: release-apk
-        path: android/app/build/outputs/apk/release/*.apk
+        path: android/app/build/outputs/apk/release/
+        if-no-files-found: warn
 
     - name: Create Release (manual)
       if: github.ref == 'refs/heads/main'

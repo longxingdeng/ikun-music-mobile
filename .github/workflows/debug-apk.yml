@@ -1,0 +1,149 @@
+name: Debug APK Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_level:
+        description: 'Debug level (basic/verbose)'
+        required: false
+        default: 'basic'
+        type: choice
+        options:
+        - basic
+        - verbose
+
+jobs:
+  debug-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install dependencies
+      run: |
+        echo "Installing npm dependencies..."
+        npm install
+        echo "Dependencies installed successfully"
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Make gradlew executable
+      run: chmod +x android/gradlew
+
+    - name: Create assets directory
+      run: |
+        mkdir -p android/app/src/main/assets
+        echo "Assets directory created"
+
+    - name: Generate Debug JS Bundle (with verbose logging)
+      run: |
+        echo "🔧 Generating JavaScript bundle for debugging..."
+        if [ "${{ github.event.inputs.debug_level }}" = "verbose" ]; then
+          npx react-native bundle \
+            --platform android \
+            --dev true \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res/ \
+            --verbose \
+            --reset-cache
+        else
+          npx react-native bundle \
+            --platform android \
+            --dev true \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res/ \
+            --reset-cache
+        fi
+        
+        echo "📊 Bundle generation completed. Checking results..."
+        ls -la android/app/src/main/assets/
+        if [ -f "android/app/src/main/assets/index.android.bundle" ]; then
+          echo "✅ Bundle file exists"
+          echo "📏 Bundle size: $(du -h android/app/src/main/assets/index.android.bundle)"
+          echo "🔍 Bundle first 200 characters:"
+          head -c 200 android/app/src/main/assets/index.android.bundle
+        else
+          echo "❌ Bundle file not found!"
+          exit 1
+        fi
+
+    - name: Build Debug APK with enhanced logging
+      run: |
+        cd android
+        echo "🏗️ Starting APK build process..."
+        ./gradlew clean --info
+        ./gradlew assembleDebug --info --stacktrace
+        echo "✅ APK build completed"
+
+    - name: Verify APK files
+      run: |
+        echo "📱 Checking generated APK files..."
+        find android/app/build/outputs/apk/debug -name "*.apk" -exec ls -lh {} \;
+        
+        echo "🔍 APK file details:"
+        for apk in android/app/build/outputs/apk/debug/*.apk; do
+          if [ -f "$apk" ]; then
+            echo "File: $apk"
+            echo "Size: $(du -h "$apk")"
+            echo "---"
+          fi
+        done
+
+    - name: Upload Debug APK with logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-apk-with-logs
+        path: |
+          android/app/build/outputs/apk/debug/*.apk
+          android/app/build/outputs/logs/
+        if-no-files-found: error
+
+    - name: Create Debug Summary
+      run: |
+        echo "## 🐛 Debug Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Build Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **Debug Level**: ${{ github.event.inputs.debug_level }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Node Version**: $(node --version)" >> $GITHUB_STEP_SUMMARY
+        echo "- **NPM Version**: $(npm --version)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Java Version**: $(java -version 2>&1 | head -1)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📱 Generated APK Files" >> $GITHUB_STEP_SUMMARY
+        for apk in android/app/build/outputs/apk/debug/*.apk; do
+          if [ -f "$apk" ]; then
+            filename=$(basename "$apk")
+            size=$(du -h "$apk" | cut -f1)
+            echo "- **$filename**: $size" >> $GITHUB_STEP_SUMMARY
+          fi
+        done
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔧 Troubleshooting Tips" >> $GITHUB_STEP_SUMMARY
+        echo "1. 下载 debug-apk-with-logs artifact" >> $GITHUB_STEP_SUMMARY
+        echo "2. 安装APK后，如果出现空白页面，请检查logcat输出" >> $GITHUB_STEP_SUMMARY
+        echo "3. 使用 \`adb logcat | grep -i 'ReactNative\\|ikun'\` 查看详细日志" >> $GITHUB_STEP_SUMMARY

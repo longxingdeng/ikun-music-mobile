@@ -5,9 +5,10 @@ const handlers: Array<() => void> = []
 
 export const listenLaunchEvent = () => {
   Navigation.events().registerAppLaunchedListener(() => {
-    // console.log('Register app launched listener', launched)
+    console.log('🚀 React Native Navigation app launched event received')
     launched = true
     setImmediate(() => {
+      console.log(`📱 Executing ${handlers.length} launch handlers`)
       for (const handler of handlers) handler()
     })
   })
