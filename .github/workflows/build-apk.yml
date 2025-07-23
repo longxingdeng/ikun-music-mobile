@@ -49,9 +49,16 @@ jobs:
     - name: Create assets directory
       run: mkdir -p android/app/src/main/assets
 
+    - name: Build Debug APK
+      run: |
+        cd android
+        ./gradlew clean
+        ./gradlew assembleDebug
+
     - name: Generate JS Bundle for Release
       run: |
-        echo "Generating JavaScript bundle..."
+        echo "Generating JavaScript bundle for Release..."
+        mkdir -p android/app/src/main/assets
         npx react-native bundle \
           --platform android \
           --dev false \
@@ -60,16 +67,8 @@ jobs:
           --assets-dest android/app/src/main/res/ \
           --reset-cache
 
-        echo "Checking generated bundle..."
-        ls -la android/app/src/main/assets/
-        echo "Bundle size:"
-        du -h android/app/src/main/assets/index.android.bundle || echo "Bundle not found!"
-
-    - name: Build Debug APK
-      run: |
-        cd android
-        ./gradlew clean
-        ./gradlew assembleDebug
+        echo "Bundle generated successfully"
+        ls -la android/app/src/main/assets/ || echo "Assets directory not found"
 
     - name: Build Release APK
       run: |
@@ -89,7 +88,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: debug-apk
-        path: android/app/build/outputs/apk/debug/
+        path: android/app/build/outputs/apk/debug/*.apk
         if-no-files-found: error
 
     - name: Upload Release APK (if exists)
@@ -97,7 +96,7 @@ jobs:
       if: always()
       with:
         name: release-apk
-        path: android/app/build/outputs/apk/release/
+        path: android/app/build/outputs/apk/release/*.apk
         if-no-files-found: warn
 
     - name: Create Release (manual)
