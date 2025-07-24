@@ -37,6 +37,10 @@ jobs:
         echo "Verifying React Native installation..."
         ls -la node_modules/react-native/ || echo "React Native not found"
         ls -la node_modules/@react-native-community/cli-platform-android/ || echo "CLI platform android not found"
+        echo "Checking critical files..."
+        ls -la node_modules/@react-native-community/cli-platform-android/native_modules.gradle || echo "native_modules.gradle not found"
+        echo "React Native version:"
+        cat node_modules/react-native/package.json | grep '"version"' || echo "Version not found"
 
     - name: Cache Gradle packages
       uses: actions/cache@v3

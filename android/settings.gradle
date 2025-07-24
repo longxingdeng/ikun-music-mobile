@@ -18,23 +18,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = 'lx-music-mobile'
-// 修复CI环境中的路径解析问题
-def reactNativeDir = file("../node_modules/react-native")
-def cliPlatformAndroidDir = file("../node_modules/@react-native-community/cli-platform-android")
-
-if (reactNativeDir.exists()) {
-    apply from: new File(reactNativeDir, "react.gradle")
-} else {
-    // 回退到动态解析
-    apply from: new File(['node', '--print', "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim(), '../react.gradle')
-}
-
-if (cliPlatformAndroidDir.exists()) {
-    apply from: new File(cliPlatformAndroidDir, "native_modules.gradle")
-    applyNativeModulesSettingsGradle(settings)
-} else {
-    // 回退到动态解析
-    apply from: new File(['node', '--print', "require.resolve('@react-native-community/cli-platform-android/package.json')"].execute(null, rootDir).text.trim(), '../native_modules.gradle')
-    applyNativeModulesSettingsGradle(settings)
-}
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
 include ':app'
