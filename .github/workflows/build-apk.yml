@@ -31,7 +31,12 @@ jobs:
       uses: android-actions/setup-android@v3
 
     - name: Install dependencies
-      run: npm install
+      run: |
+        echo "Installing npm dependencies..."
+        npm ci --prefer-offline --no-audit
+        echo "Verifying React Native installation..."
+        ls -la node_modules/react-native/ || echo "React Native not found"
+        ls -la node_modules/@react-native-community/cli-platform-android/ || echo "CLI platform android not found"
 
     - name: Cache Gradle packages
       uses: actions/cache@v3
