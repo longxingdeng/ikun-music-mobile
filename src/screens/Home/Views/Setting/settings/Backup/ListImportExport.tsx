@@ -20,12 +20,15 @@ const initSelectInfo = {}
 //   // onSync: (listInfo: LX.List.UserListInfo) => void
 //   // onRemove: (listInfo: LX.List.MyListInfo) => void
 // }
+export interface ListImportExportProps {
+  isScanMusic: boolean
+}
 export interface ListImportExportType {
   import: () => void
   export: () => void
 }
 
-export default forwardRef<ListImportExportType, {}>((props, ref) => {
+export default forwardRef<ListImportExportType, ListImportExportProps>((props, ref) => {
   const [visible, setVisible] = useState(false)
   const choosePathRef = useRef<ChoosePathType>(null)
   const selectInfoRef = useRef<SelectInfo>(initSelectInfo as SelectInfo)
@@ -38,7 +41,7 @@ export default forwardRef<ListImportExportType, {}>((props, ref) => {
         choosePathRef.current?.show({
           title: global.i18n.t('list_import_part_desc'),
           dirOnly: false,
-          filter: LXM_FILE_EXT_RXP,
+          filter: [LXM_FILE_EXT_RXP.source],
         })
       } else {
         setVisible(true)
@@ -46,7 +49,7 @@ export default forwardRef<ListImportExportType, {}>((props, ref) => {
           choosePathRef.current?.show({
             title: global.i18n.t('list_import_part_desc'),
             dirOnly: false,
-            filter: LXM_FILE_EXT_RXP,
+            filter: [LXM_FILE_EXT_RXP.source],
           })
         })
       }
@@ -57,7 +60,6 @@ export default forwardRef<ListImportExportType, {}>((props, ref) => {
         choosePathRef.current?.show({
           title: global.i18n.t('list_export_part_desc'),
           dirOnly: true,
-          filter: LXM_FILE_EXT_RXP,
         })
       } else {
         setVisible(true)
@@ -65,7 +67,6 @@ export default forwardRef<ListImportExportType, {}>((props, ref) => {
           choosePathRef.current?.show({
             title: global.i18n.t('list_export_part_desc'),
             dirOnly: true,
-            filter: LXM_FILE_EXT_RXP,
           })
         })
       }

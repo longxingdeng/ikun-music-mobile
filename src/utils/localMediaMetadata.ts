@@ -1,9 +1,9 @@
 import { temporaryDirectoryPath, readDir, unlink, extname } from '@/utils/fs'
-import { readPic as _readPic } from 'react-native-local-media-metadata'
+import { readPic as _readPic, readMetadata as _readMetadata, type MusicMetadata, type MusicMetadataFull } from 'react-native-local-media-metadata'
+
 export {
   type MusicMetadata,
   type MusicMetadataFull,
-  readMetadata,
   writeMetadata,
   writePic,
   readLyric,
@@ -12,6 +12,14 @@ export {
 
 let cleared = false
 const picCachePath = temporaryDirectoryPath + '/local-media-metadata'
+
+export const readMetadata = async(filePath: string): Promise<MusicMetadataFull | null> => {
+  const metadata = await _readMetadata(filePath)
+  if (metadata?.type == 'flac') {
+    metadata.picture = await readPic(filePath)
+  }
+  return metadata
+}
 
 export const scanAudioFiles = async (dirPath: string) => {
   const files = await readDir(dirPath)

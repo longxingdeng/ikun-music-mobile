@@ -1,7 +1,8 @@
 import { scanAudioFilesRecursive, readMetadata, type MusicMetadataFull } from '@/utils/localMediaMetadata'
 import { getExternalStoragePaths, externalStorageDirectoryPath } from '@/utils/fs'
-import { buildLocalMusicInfo } from '@/screens/Home/Views/Mylist/MyList/listAction'
 import { toast } from '@/utils/tools'
+import { buildLocalMusicInfo } from '@/utils/music'
+import settingState from '@/store/setting/state'
 import { log } from '@/utils/log'
 import BackgroundTimer from 'react-native-background-timer'
 
@@ -115,7 +116,7 @@ class LocalMusicScanner {
           try {
             const metadata = await readMetadata(file.path)
             if (metadata) {
-              return buildLocalMusicInfo(file.path, metadata)
+              return buildLocalMusicInfo(file.path, metadata, settingState.setting.setting)
             }
           } catch (error) {
             log.warn('LocalMusicScanner', `Failed to read metadata for: ${file.path}`, error)
@@ -124,7 +125,7 @@ class LocalMusicScanner {
         })
 
         const batchResults = await Promise.all(batchPromises)
-        const validResults = batchResults.filter((result): result is LX.Music.MusicInfoLocal => result !== null)
+        const validResults = batchResults.filter((result: LX.Music.MusicInfoLocal | null): result is LX.Music.MusicInfoLocal => result !== null)
         musicList.push(...validResults)
 
         onProgress?.({
@@ -136,7 +137,7 @@ class LocalMusicScanner {
         })
 
         // 让出执行权，避免阻塞UI
-        await new Promise(resolve => BackgroundTimer.setTimeout(resolve, 10))
+        await new Promise(resolve => BackgroundTimer.setTimeout(() => resolve(undefined), 10))
       }
 
       if (this.shouldStop || scanId !== this.currentScanId) {
@@ -159,7 +160,7 @@ class LocalMusicScanner {
     } catch (error) {
       const err = error as Error
       log.error('LocalMusicScanner', 'Scan failed', err)
-      onError?.(err)
+      options.onError?.(err)
       throw err
     } finally {
       this.isScanning = false
@@ -188,9 +189,16 @@ class LocalMusicScanner {
     const paths: string[] = []
 
     try {
-      // 获取外部存储路径
-      const externalPaths = await getExternalStoragePaths()
-      paths.push(...externalPaths)
+      // 获取所有外部存储路径（包括内置和可移动）
+      const allExternalPaths = await getExternalStoragePaths()
+      paths.push(...allExternalPaths)
+
+      // 单独获取可移动存储（U盘、SD卡）的路径，确保它们被包含
+      const removablePaths = await getExternalStoragePaths(true)
+      paths.push(...removablePaths)
+      if (removablePaths.length) {
+        log.info('LocalMusicScanner', `Found removable storage paths: ${removablePaths.join(', ')}`)
+      }
     } catch (error) {
       log.warn('LocalMusicScanner', 'Failed to get external storage paths', error)
     }
@@ -224,3 +232,21 @@ class LocalMusicScanner {
 
 // 导出单例实例
 export const localMusicScanner = new LocalMusicScanner()
+
+export const scanMusic = async() => {
+  if (localMusicScanner.scanning) return
+  toast(global.i18n.t('setting_other_local_music_scan_start_toast'))
+  let total = 0
+  try {
+    await localMusicScanner.scanAllMusic({
+      onProgress(progress) {
+        total = progress.total
+      },
+    })
+  } catch (err) {
+    log.error(err)
+    toast(global.i18n.t('setting_other_local_music_scan_error_toast'))
+    return
+  }
+  toast(global.i18n.t('setting_other_local_music_scan_end_toast', { total }))
+}

@@ -8,7 +8,7 @@ import {
 } from '@/core/list'
 import { filterMusicList, fixNewMusicInfoQuality, toNewMusicInfo } from '@/utils'
 import { log } from '@/utils/log'
-import { confirmDialog, handleReadFile, handleSaveFile, showImportTip, toast } from '@/utils/tools'
+import { confirmDialog, getFormattedDate, handleReadFile, handleSaveFile, showImportTip, toast } from '@/utils/tools'
 import listState from '@/store/list/state'
 
 const getAllLists = async () => {
@@ -130,7 +130,9 @@ export const handleImportListPart = async (
         })
       return
     }
-    listData.id += `__${Date.now()}`
+    const timeStr = getFormattedDate()
+    listData.id += `__${timeStr}`
+    listData.name += `__${timeStr}`
   }
   const userList = listData as LX.List.UserListInfoFull
   void createList({

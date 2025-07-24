@@ -1,4 +1,23 @@
-rootProject.name = 'com.ikunshare.music.mobile'
-apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
+pluginManagement {
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'lx-music-mobile'
+apply from: new File(['node', '--print', "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim(), '../react.gradle')
+apply from: new File(['node', '--print', "require.resolve('@react-native-community/cli-platform-android/package.json')"].execute(null, rootDir).text.trim(), '../native_modules.gradle'); applyNativeModulesSettingsGradle(settings)
 include ':app'
-includeBuild('../node_modules/@react-native/gradle-plugin')

@@ -25,15 +25,24 @@ export const getExternalStoragePaths = async (is_removable?: boolean) =>
 
 export const selectManagedFolder = async (isPersist: boolean = false) =>
   AndroidScoped.openDocumentTree(isPersist)
-export const selectFile = async (options: OpenDocumentOptions) =>
-  AndroidScoped.openDocument(options)
+export const selectDir = async (options: { title?: string, isPersist?: boolean }) => {
+  const dir = await AndroidScoped.openDocumentTree(options.isPersist ?? false)
+  return dir
+}
+export const selectFile = async(options: OpenDocumentOptions) => {
+  const file: any = await AndroidScoped.openDocument(options)
+  return file?.[0]?.uri ?? null
+}
 export const removeManagedFolder = async (path: string) =>
   AndroidScoped.releasePersistableUriPermission(path)
 export const getManagedFolders = async () => AndroidScoped.getPersistedUriPermissions()
 
 export const getPersistedUriList = async () => AndroidScoped.getPersistedUriPermissions()
 
-export const readDir = async (path: string) => FileSystem.ls(path)
+export const readDir = async(path: string) => {
+  const files = await FileSystem.ls(path)
+  return files
+}
 
 export const unlink = async (path: string) => FileSystem.unlink(path)
 

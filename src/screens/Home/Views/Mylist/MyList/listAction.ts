@@ -128,9 +128,10 @@ export const buildLocalMusicInfoByFilePath = (file: FileType): LX.Music.MusicInf
 }
 export const buildLocalMusicInfo = (
   filePath: string,
-  metadata: MusicMetadataFull
+  metadata: MusicMetadataFull,
+  setting: LX.AppSetting['setting']
 ): LX.Music.MusicInfoLocal => {
-  return {
+  const info: LX.Music.MusicInfoLocal = {
     id: filePath,
     name: metadata.name,
     singer: metadata.singer,
@@ -140,10 +141,21 @@ export const buildLocalMusicInfo = (
       albumName: metadata.albumName,
       filePath,
       songId: filePath,
-      picUrl: '',
+      picUrl: metadata.picture,
       ext: metadata.ext,
     },
   }
+  if (setting.other.isScanMusicIsMusic) {
+    const singer = info.singer
+    const name = info.name
+    if (singer && name) {
+      const singerName = singer.split('、')
+      if (singerName.length > 1 && singerName.some(s => name.includes(s))) {
+        info.name = name.replace(new RegExp(singerName.join('|'), 'g'), '').trim()
+      }
+    }
+  }
+  return info
 }
 const createLocalMusicInfos = async (
   filePaths: string[],
@@ -168,7 +180,7 @@ const createLocalMusicInfos = async (
           errorPath.push(path)
           continue
         }
-        list.push(buildLocalMusicInfo(path, info))
+        list.push(buildLocalMusicInfo(path, info, settingState.setting.setting))
       }
     })
   }
@@ -247,7 +259,7 @@ export const handleImportMediaFile = async (listInfo: LX.List.MyListInfo, path: 
     await addListMusics(
       listInfo.id,
       files.map(buildLocalMusicInfoByFilePath),
-      settingState.setting['list.addMusicLocationType']
+      settingState.setting.setting.list.addMusicLocationType
     )
     toast(global.i18n.t('list_select_local_file_temp_add_tip', { total: files.length }), 'long')
     await handleUpdateMusics(
