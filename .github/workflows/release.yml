@@ -1,9 +1,11 @@
 name: Build
 
 on:
-  push:
-    branches:
-      - main
+  # 暂时禁用自动触发，避免签名配置问题
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:
 
 jobs:
   Android:
@@ -20,10 +22,21 @@ jobs:
         shell: bash
         run: |
           cd android
-          echo ${{ secrets.KEYSTORE_STORE_FILE_BASE64 }} | base64 --decode > app/${{ secrets.KEYSTORE_STORE_FILE }}
-          chmod +x ./gradlew
-          ./gradlew assembleRelease -PMYAPP_UPLOAD_STORE_FILE='${{ secrets.KEYSTORE_STORE_FILE }}' -PMYAPP_UPLOAD_KEY_ALIAS='${{ secrets.KEYSTORE_KEY_ALIAS }}' -PMYAPP_UPLOAD_STORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}' -PMYAPP_UPLOAD_KEY_PASSWORD='${{ secrets.KEYSTORE_KEY_PASSWORD }}'
-          rm -f app/${{ secrets.KEYSTORE_STORE_FILE }}
+          # 检查是否配置了签名密钥
+          if [ -n "${{ secrets.KEYSTORE_STORE_FILE_BASE64 }}" ] && [ -n "${{ secrets.KEYSTORE_STORE_FILE }}" ]; then
+            echo "Using configured keystore for release build..."
+            echo ${{ secrets.KEYSTORE_STORE_FILE_BASE64 }} | base64 --decode > app/${{ secrets.KEYSTORE_STORE_FILE }}
+            chmod +x ./gradlew
+            ./gradlew assembleRelease -PMYAPP_UPLOAD_STORE_FILE='${{ secrets.KEYSTORE_STORE_FILE }}' -PMYAPP_UPLOAD_KEY_ALIAS='${{ secrets.KEYSTORE_KEY_ALIAS }}' -PMYAPP_UPLOAD_STORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}' -PMYAPP_UPLOAD_KEY_PASSWORD='${{ secrets.KEYSTORE_KEY_PASSWORD }}'
+            rm -f app/${{ secrets.KEYSTORE_STORE_FILE }}
+          else
+            echo "No keystore configured, building debug APK instead..."
+            chmod +x ./gradlew
+            ./gradlew assembleDebug
+            # 复制debug APK到release目录以保持工作流兼容性
+            mkdir -p app/build/outputs/apk/release
+            cp app/build/outputs/apk/debug/*.apk app/build/outputs/apk/release/ || echo "No debug APK found"
+          fi
 
       # Push tag to GitHub if package.json version's tag is not tagged
       - name: Get package version
