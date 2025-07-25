@@ -32,40 +32,76 @@ const handlePushedHomeScreen = async () => {
 
 let isInited = false
 export default async () => {
-  if (isInited) return handlePushedHomeScreen
-  bootLog('Initing...')
-  commonActions.setFontSize(global.lx.fontSize)
-  bootLog('Font size changed.')
-  const setting = await initSetting()
-  bootLog('Setting inited.')
-  // console.log(setting)
+  console.log('🔧 Core initialization starting...')
+  if (isInited) {
+    console.log('✅ Core already initialized, returning handler')
+    return handlePushedHomeScreen
+  }
 
-  await initTheme(setting)
-  bootLog('Theme inited.')
-  await initI18n(setting)
-  bootLog('I18n inited.')
+  try {
+    bootLog('Initing...')
+    console.log('📝 Setting font size...')
+    commonActions.setFontSize(global.lx.fontSize)
+    bootLog('Font size changed.')
+    console.log(`✅ Font size set to: ${global.lx.fontSize}`)
 
-  await initUserApi(setting)
-  bootLog('User Api inited.')
+    console.log('⚙️ Initializing settings...')
+    const setting = await initSetting()
+    bootLog('Setting inited.')
+    console.log('✅ Settings initialized successfully')
 
-  setApiSource(setting['common.apiSource'])
-  bootLog('Api inited.')
+    console.log('🎨 Initializing theme...')
+    await initTheme(setting)
+    bootLog('Theme inited.')
+    console.log('✅ Theme initialized successfully')
 
-  registerPlaybackService()
-  bootLog('Playback Service Registered.')
-  await initPlayer(setting)
-  bootLog('Player inited.')
-  await dataInit(setting)
-  bootLog('Data inited.')
-  await initCommonState(setting)
-  bootLog('Common State inited.')
+    console.log('🌍 Initializing i18n...')
+    await initI18n(setting)
+    bootLog('I18n inited.')
+    console.log('✅ I18n initialized successfully')
 
-  void initSync(setting)
-  bootLog('Sync inited.')
+    console.log('👤 Initializing user API...')
+    await initUserApi(setting)
+    bootLog('User Api inited.')
+    console.log('✅ User API initialized successfully')
 
-  // syncSetting()
+    console.log('🔗 Setting API source...')
+    setApiSource(setting['common.apiSource'])
+    bootLog('Api inited.')
+    console.log(`✅ API source set to: ${setting['common.apiSource']}`)
 
-  isInited ||= true
+    console.log('🎵 Registering playback service...')
+    registerPlaybackService()
+    bootLog('Playback Service Registered.')
+    console.log('✅ Playback service registered successfully')
 
-  return handlePushedHomeScreen
+    console.log('▶️ Initializing player...')
+    await initPlayer(setting)
+    bootLog('Player inited.')
+    console.log('✅ Player initialized successfully')
+
+    console.log('📊 Initializing data...')
+    await dataInit(setting)
+    bootLog('Data inited.')
+    console.log('✅ Data initialized successfully')
+
+    console.log('🔧 Initializing common state...')
+    await initCommonState(setting)
+    bootLog('Common State inited.')
+    console.log('✅ Common state initialized successfully')
+
+    console.log('🔄 Initializing sync (async)...')
+    void initSync(setting)
+    bootLog('Sync inited.')
+    console.log('✅ Sync initialization started')
+
+    isInited ||= true
+    console.log('🎯 Core initialization completed successfully')
+
+    return handlePushedHomeScreen
+  } catch (error) {
+    console.error('❌ Critical error during core initialization:', error)
+    bootLog(`Core init failed: ${error.message}`)
+    throw error
+  }
 }

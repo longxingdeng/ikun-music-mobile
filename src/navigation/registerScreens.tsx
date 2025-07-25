@@ -1,6 +1,7 @@
 // @flow
 
 import { Navigation } from 'react-native-navigation'
+import { View, Text } from 'react-native'
 
 import {
   Home,
@@ -27,25 +28,65 @@ import SyncModeModal from './components/SyncModeModal'
 
 function WrappedComponent(Component: any) {
   return function inject(props: Record<string, any>) {
-    const EnhancedComponent = () => (
-      <Provider>
-        <Component {...props} />
-      </Provider>
-    )
+    console.log(`🔧 Wrapping component with props:`, Object.keys(props || {}))
+
+    const EnhancedComponent = () => {
+      console.log(`🎨 Rendering enhanced component: ${Component.name || 'Unknown'}`)
+      try {
+        return (
+          <Provider>
+            <Component {...props} />
+          </Provider>
+        )
+      } catch (error) {
+        console.error(`❌ Error rendering component ${Component.name}:`, error)
+        // 返回一个简单的错误显示组件而不是崩溃
+        return (
+          <Provider>
+            <View style={{ padding: 20, backgroundColor: 'red', flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ color: 'white', fontSize: 16, textAlign: 'center' }}>
+                Error loading component: {error.message}
+              </Text>
+            </View>
+          </Provider>
+        )
+      }
+    }
 
     return <EnhancedComponent />
   }
 }
 
 export default () => {
-  Navigation.registerComponent(HOME_SCREEN, () => WrappedComponent(Home))
-  Navigation.registerComponent(PLAY_DETAIL_SCREEN, () => WrappedComponent(PlayDetail))
-  Navigation.registerComponent(SONGLIST_DETAIL_SCREEN, () => WrappedComponent(SonglistDetail))
-  Navigation.registerComponent(COMMENT_SCREEN, () => WrappedComponent(Comment))
-  Navigation.registerComponent(VERSION_MODAL, () => WrappedComponent(VersionModal))
-  Navigation.registerComponent(PACT_MODAL, () => WrappedComponent(PactModal))
-  Navigation.registerComponent(SYNC_MODE_MODAL, () => WrappedComponent(SyncModeModal))
-  // Navigation.registerComponent(SETTING_SCREEN, () => WrappedComponent(Setting))
+  console.log('🔧 Starting screen registration...')
 
-  console.info('All screens have been registered...')
+  try {
+    console.log(`📱 Registering ${HOME_SCREEN}...`)
+    Navigation.registerComponent(HOME_SCREEN, () => WrappedComponent(Home))
+
+    console.log(`📱 Registering ${PLAY_DETAIL_SCREEN}...`)
+    Navigation.registerComponent(PLAY_DETAIL_SCREEN, () => WrappedComponent(PlayDetail))
+
+    console.log(`📱 Registering ${SONGLIST_DETAIL_SCREEN}...`)
+    Navigation.registerComponent(SONGLIST_DETAIL_SCREEN, () => WrappedComponent(SonglistDetail))
+
+    console.log(`📱 Registering ${COMMENT_SCREEN}...`)
+    Navigation.registerComponent(COMMENT_SCREEN, () => WrappedComponent(Comment))
+
+    console.log(`📱 Registering ${VERSION_MODAL}...`)
+    Navigation.registerComponent(VERSION_MODAL, () => WrappedComponent(VersionModal))
+
+    console.log(`📱 Registering ${PACT_MODAL}...`)
+    Navigation.registerComponent(PACT_MODAL, () => WrappedComponent(PactModal))
+
+    console.log(`📱 Registering ${SYNC_MODE_MODAL}...`)
+    Navigation.registerComponent(SYNC_MODE_MODAL, () => WrappedComponent(SyncModeModal))
+
+    // Navigation.registerComponent(SETTING_SCREEN, () => WrappedComponent(Setting))
+
+    console.log('✅ All screens have been registered successfully!')
+  } catch (error) {
+    console.error('❌ Error during screen registration:', error)
+    throw error
+  }
 }

@@ -1,9 +1,28 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+        <!-- 确保应用有明确的背景色，防止空白屏幕 -->
+        <item name="android:windowBackground">@drawable/launch_screen_background</item>
+        <!-- 防止启动时的白屏 -->
+        <item name="android:windowDisablePreview">false</item>
+        <!-- 设置状态栏样式 -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- 全屏显示 -->
+        <item name="android:windowFullscreen">false</item>
+        <!-- 保持屏幕常亮 -->
+        <item name="android:keepScreenOn">false</item>
+    </style>
+
+    <!-- 启动屏主题 -->
+    <style name="SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/launch_screen_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowDisablePreview">true</item>
     </style>
 
 </resources>

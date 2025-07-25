@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用背景色，防止空白屏幕 -->
+    <color name="app_background">#000000</color>
+    <!-- 启动屏背景色 -->
+    <color name="splash_background">#000000</color>
+    <!-- 主要颜色 -->
+    <color name="primary_color">#039893</color>
+    <!-- 文本颜色 -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#CCCCCC</color>
+</resources>
